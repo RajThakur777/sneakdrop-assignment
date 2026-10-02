@@ -9,8 +9,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-const TOTAL_PAIRS = 20;
-const HOLD_DURATION_MS = 5 * 60 * 1000;
+const TOTAL_PAIRS = 2;
+const HOLD_DURATION_MS = 15 * 1000; // 15 seconds for demo purposes
 
 let stock = TOTAL_PAIRS;
 // holds: Map<userId, { orderId: string, expiresAt: number }>
