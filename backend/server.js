@@ -6,20 +6,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files
+
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const TOTAL_PAIRS = 2;
-const HOLD_DURATION_MS = 15 * 1000; // 15 seconds for demo purposes
+const HOLD_DURATION_MS = 15 * 1000;
 
 let stock = TOTAL_PAIRS;
-// holds: Map<userId, { orderId: string, expiresAt: number }>
+
 let holds = new Map();
-// purchases: Map<userId, number>
+
 let purchases = new Map();
-// waitlist: Array<userId>
+
 let waitlist = [];
-// completedOrders: Set<string>
+
 let completedOrders = new Set();
 
 function processExpiredHolds() {
@@ -27,12 +27,12 @@ function processExpiredHolds() {
     for (const [userId, hold] of holds.entries()) {
         if (hold.expiresAt <= now) {
             holds.delete(userId);
-            
+
             if (waitlist.length > 0) {
                 const nextUserId = waitlist.shift();
-                holds.set(nextUserId, { 
-                    orderId: uuidv4(), 
-                    expiresAt: Date.now() + HOLD_DURATION_MS 
+                holds.set(nextUserId, {
+                    orderId: uuidv4(),
+                    expiresAt: Date.now() + HOLD_DURATION_MS
                 });
             } else {
                 stock++;
@@ -45,7 +45,7 @@ if (process.env.NODE_ENV !== 'test') {
     setInterval(processExpiredHolds, 1000);
 }
 
-// API Endpoints
+
 app.get('/api/status', (req, res) => {
     processExpiredHolds();
     const userId = req.query.userId;
@@ -100,7 +100,7 @@ app.post('/api/buy', (req, res) => {
 app.post('/api/payment-webhook', (req, res) => {
     processExpiredHolds();
     const { orderId, status } = req.body;
-    
+
     if (!orderId || status !== 'succeeded') {
         return res.status(400).json({ error: 'Invalid payment payload' });
     }
@@ -120,10 +120,10 @@ app.post('/api/payment-webhook', (req, res) => {
     if (foundUserId) {
         holds.delete(foundUserId);
         completedOrders.add(orderId);
-        
+
         const count = purchases.get(foundUserId) || 0;
         purchases.set(foundUserId, count + 1);
-        
+
         console.log(`Payment successful for user ${foundUserId}, order ${orderId}`);
         return res.json({ message: 'Payment applied successfully' });
     } else {
@@ -132,7 +132,6 @@ app.post('/api/payment-webhook', (req, res) => {
     }
 });
 
-// Fallback to serve index.html for any other route
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
